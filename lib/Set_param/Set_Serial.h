@@ -7,6 +7,7 @@
 #define CMD 1
 #define WEEL 2
 #define MAX 16
+#define CAN_MAX 8
 
 enum error{
     START_SYMBOL = 30000,   //стартовый символ не S/s
@@ -21,12 +22,14 @@ enum error{
     INTERVAL_T_L,           //Не входит в заданный интервал для левого колеса (T) [-300;300]
     INTERVAL_T_R,           //Не входит в заданный интервал для правого колеса (T) [-300;300]
     INTERVAL_F,             //Не входит в заданный интервал для периода отправки [50;1000]
-    NOT_NUM                 //Некорректная запись (char вместо int) 
+    NOT_NUM,                //Некорректная запись (char вместо int) 
+    ERR_ID                  //неверный ID
 };
 
 class Set_Serial{
     private:
     int16_t val = 0;
+    uint8_t CAN_data[CAN_MAX];
     public:
     Set_Serial();
     ~Set_Serial();
@@ -37,6 +40,7 @@ class Set_Serial{
     void read_US();
     bool check_US(int16_t val);
     void read_val(uint8_t *buf);
+    void print(uint8_t *data, uint32_t D);
 };
 
 

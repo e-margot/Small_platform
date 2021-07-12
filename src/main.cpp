@@ -147,7 +147,7 @@ void send_message();
 void work_with_CAN();
 
 void loop() {
-   //set_speed_serial();
+   set_speed_serial();
    work_with_CAN();
   //Set_Serial set;
   /* if (millis() - timing > freq_send){
@@ -255,9 +255,7 @@ void set_speed_serial() {
 }
 void work_with_CAN(){
     CAN_frame_t rx_frame;
-
-//  unsigned long currentMillis = millis();
-
+    Set_Serial Get_data;
   // Receive next CAN frame from queue
   if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
 
@@ -278,15 +276,17 @@ void work_with_CAN(){
          //  Serial.println();
 
         // Serial.print(" ");
-     // printf("0x%02X ", rx_frame.data.u8[i]);
+   //   printf("0x%02X ", rx_frame.data.u8[i]);
       }
            Serial.println();
    
-     Serial.print(rx_frame.MsgID, HEX);
+   //  Serial.print(rx_frame.MsgID, HEX);
      if (rx_frame.MsgID == 11){
-         Serial.print("DONE");
+       //  Serial.print("DONE");
      }
+     Get_data.print(rx_frame.data.u8,rx_frame.MsgID );
   printf("\n");
+  
    }
 }
 }

@@ -2,6 +2,9 @@
 
 Set_Serial::Set_Serial(){
     val = 0;
+    for (uint8_t i = 0; i < CAN_MAX; i++){
+        CAN_data[i] = 0;
+    }
 }
 
 Set_Serial::~Set_Serial(){
@@ -109,4 +112,25 @@ void Set_Serial:: read_US(){
     for (uint8_t i = 0; i < 16; i++){
         Serial.print(buffer[i], DEC);
     }
+}
+
+void Set_Serial::print(uint8_t *data, uint32_t D){
+    if (D == 11){
+        Serial.print("US\t");
+        CAN_data[0] = data[0];
+    }
+    else if (D == 10){
+        Serial.print("IR\t");
+        for (int i = 0; i < CAN_MAX; i++){
+            CAN_data[i] = data[i];
+        }
+    }
+    else Serial.print(ERR_ID);
+  // Serial.print(sizeof(data), DEC);
+   
+    for (int i = 0; i < CAN_MAX; i++){
+        Serial.print(CAN_data[i]);
+         Serial.print("\t");
+    }
+    Serial.println();
 }
