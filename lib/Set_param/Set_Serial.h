@@ -34,9 +34,10 @@ class Set_Serial{
     int16_t check_error_c(uint8_t *buf, bool num, uint8_t LR);
     int16_t check_error_f(uint8_t *buf);
     int16_t read_command(uint8_t *buf, uint8_t size);
+
     void read_val(uint8_t *buf);
 };
 
-
+//fwagwihg
 
 #endif
