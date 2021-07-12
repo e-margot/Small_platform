@@ -6,6 +6,9 @@
 #include <Engine.h>
 
 #include "Set_Serial.h"
+
+#include <ESP32CAN.h>
+#include <CAN_config.h>
 void set_speed_serial();
 
 constexpr uint8_t M1_WHEEL_BACKWARD = GPIO_NUM_33; // = GPIO_NUM_27;
@@ -48,6 +51,11 @@ constexpr uint8_t LEFT_ENCODER         = M1_ENCODER1;
 #endif
 constexpr uint8_t CHANNEL_RIGHT_WHELL  = 0;
 constexpr uint8_t CHANNEL_LEFT_WHELL   = 1;
+//init CAN 
+CAN_device_t CAN_cfg;               // CAN Config
+unsigned long previousMillis = 0;   // will store last time a CAN Message was send
+const int interval = 500;          // interval at which send CAN Messages (milliseconds)
+const int rx_queue_size = 10;       // Receive Queue size
 
 #define TIMER_NUMBER 0
 // Частота ESP32 = 80МГц = 80.000.000Гц, при
@@ -126,12 +134,21 @@ void setup() {
 
     engine_left.set_target_speed(0);
     engine_right.set_target_speed(0);
+     //CAN
+     CAN_cfg.speed = CAN_SPEED_1000KBPS;
+     CAN_cfg.tx_pin_id = GPIO_NUM_22;
+     CAN_cfg.rx_pin_id = GPIO_NUM_21;
+     CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
+     // Init CAN Module
+     ESP32Can.CANInit();
 }
 unsigned long timing;
 void send_message();
+void work_with_CAN();
 
 void loop() {
-   set_speed_serial();
+   //set_speed_serial();
+   work_with_CAN();
   //Set_Serial set;
   /* if (millis() - timing > freq_send){
         timing = millis(); 
@@ -236,7 +253,43 @@ void set_speed_serial() {
         val1=0; val2=0;
     }
 }
+void work_with_CAN(){
+    CAN_frame_t rx_frame;
 
+//  unsigned long currentMillis = millis();
+
+  // Receive next CAN frame from queue
+  if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
+
+    if (rx_frame.FIR.B.FF == CAN_frame_std) {
+    //  printf("New standard frame");
+    }
+    else { //расширенный кадр
+      printf("New extended frame");
+    }
+
+    if (rx_frame.FIR.B.RTR == CAN_RTR) { //Если этот бит равен нулю, значит передаётся Data Frame (полезные данные), если равен единице, значит передаётся Remote Frame.
+      printf(" RTR from 0x%08X, DLC %d\r\n", rx_frame.MsgID,  rx_frame.FIR.B.DLC);
+    }
+    else {
+  //    printf(" from 0x%08X, DLC %d, Data ", rx_frame.MsgID,  rx_frame.FIR.B.DLC); //DLC четыре бита определяющие количество полезных байт (DATA) в кадре.
+      for (int i = 0; i < rx_frame.FIR.B.DLC; i++) {
+         // Serial.print(rx_frame.data.u8[i]); //эти данные в массив записывать
+         //  Serial.println();
+
+        // Serial.print(" ");
+     // printf("0x%02X ", rx_frame.data.u8[i]);
+      }
+           Serial.println();
+   
+     Serial.print(rx_frame.MsgID, HEX);
+     if (rx_frame.MsgID == 11){
+         Serial.print("DONE");
+     }
+  printf("\n");
+   }
+}
+}
 #else
 
 #define USE_OLD_CODE1
