@@ -132,6 +132,12 @@ void send_message();
 
 void loop() {
    set_speed_serial();
+  //Set_Serial set;
+  /* if (millis() - timing > freq_send){
+        timing = millis(); 
+        set.read_US();
+        Serial.println();
+   }*/
 }
 
 void send_message(){
@@ -169,13 +175,11 @@ void set_speed_serial() {
               // Serial.print(engine_left.get_power());
             }
             else{
-             //   Serial.println("YOU ARE LOSER");
             }
             if (val2 < ERROR){
                engine_right.set_target_speed(val2);
             }
             else{
-               // Serial.println("YOU ARE LOSER");
             }
             Serial.println(val1);
             Serial.println(val2);
@@ -187,35 +191,27 @@ void set_speed_serial() {
             if (buffer[2] == 'L' || buffer[2] == 'l') {
                 if (val1 < ERROR && val2 < ERROR){
                     engine_left.set_coefficient(val1, 0, val2);
-                  //  Serial.println("YOU ARE WIN");
                 }
                 else if (val1 < ERROR && val2 >= ERROR){
                 engine_left.set_coefficient(val1, 0, 10000);
-             //   Serial.println("YOU ARE LOSER");
                 }
                 else if (val2 < ERROR && val1 >= ERROR){
                 engine_left.set_coefficient(10000, 0, val2);
-           //     Serial.println("YOU ARE LOSER");
                 }
                 else{
-            //    Serial.println("YOU ARE LOSER");
                 }
             }
             else {
                 if (val1 < ERROR && val2 < ERROR){
                     engine_right.set_coefficient(val1, 0, val2);
-              //      Serial.println("YOU ARE WIN");
                 }
                 else if (val1 < ERROR && val2 >= ERROR){
                 engine_right.set_coefficient(val1, 0, 10000);
-             //   Serial.println("YOU ARE LOSER");
                 }
                 else if (val2 < ERROR && val1 >= ERROR){
                 engine_right.set_coefficient(10000, 0, val2);
-             //   Serial.println("YOU ARE LOSER");
                 }
                 else{
-              //  Serial.println("YOU ARE LOSER");
                 }
             }
             Serial.println(val1);

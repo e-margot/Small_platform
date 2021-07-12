@@ -80,3 +80,33 @@ int16_t Set_Serial::read_command(uint8_t *buf, uint8_t size) {
     } 
 }
 
+void Set_Serial:: read_US(){
+    uint8_t buf[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    int16_t val1 = 0; 
+   // Serial2.readBytes(&buf[0], 12);
+    for(uint8_t i = 0; i < 12; ++i) {
+        for (uint8_t j = 0; j < 3; j++){
+            if(('0' <= buf[i]) && (buf[i] <= '9')) {
+                val1 *= 10;
+                val1 += buf[i] - '0';
+            }
+            else break;
+        } 
+        if (val1 > 300) break;
+        val1 = 0;
+    }
+    uint8_t buffer[16];
+    for (uint8_t i = 0; i < 16; i++){
+        buffer[i] = 0;
+    }
+    buffer[0] = 'S';
+    buffer[1] = 'U';
+    buffer[15] = 'E';
+    uint8_t j=0;
+    for (uint8_t i = 2; i < 14; i++){
+         buffer[i] = buf[j++];
+    }
+    for (uint8_t i = 0; i < 16; i++){
+        Serial.print(buffer[i], DEC);
+    }
+}
