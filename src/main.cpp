@@ -135,7 +135,9 @@ void setup() {
     engine_left.set_target_speed(0);
     engine_right.set_target_speed(0);
      //CAN
-     CAN_cfg.speed = CAN_SPEED_1000KBPS;
+     
+    // CAN_cfg.speed = CAN_SPEED_1000KBPS; //esp small platform
+    CAN_cfg.speed = CAN_SPEED_500KBPS; //esp lora
      CAN_cfg.tx_pin_id = GPIO_NUM_22;
      CAN_cfg.rx_pin_id = GPIO_NUM_21;
      CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
@@ -147,8 +149,8 @@ void send_message();
 void work_with_CAN();
 
 void loop() {
-   set_speed_serial();
-   work_with_CAN();
+  // set_speed_serial();
+  work_with_CAN();
   //Set_Serial set;
   /* if (millis() - timing > freq_send){
         timing = millis(); 
@@ -159,11 +161,15 @@ void loop() {
 
 void send_message(){
     Serial.print(" L = ");
-     Serial.print(engine_left.get_speed());
+    Serial.print(engine_left.get_speed());
+    Serial.print(" R = ");
+    Serial.print(engine_right.get_speed());
+    work_with_CAN();
 }
 #define MAX 16
 
 uint8_t buffer[MAX];
+uint16_t buf[8];
 int16_t val1 = 0, val2 = 0;
 
 void set_speed_serial() {
@@ -177,7 +183,7 @@ void set_speed_serial() {
         }
         delay(1000);
         uint8_t size = Serial.readBytes(&buffer[0], MAX);
-        int16_t cmd = set_param.read_command(buffer, size);
+        int16_t cmd = set_param.read_command(buffer, size); //не стоит передавать size, тк буфф будет просто заполнен нулями
         if(cmd < ERROR) {
             switch(cmd){
                 case 0: 
@@ -188,23 +194,24 @@ void set_speed_serial() {
             val2 = set_param.check_error_t(&buffer[9], 1);
             if (val1 < ERROR){
                 engine_left.set_target_speed(val1);
-                //engine_left.PID_calculate();
-              // Serial.print(engine_left.get_power());
             }
             else{
+                Serial.println(val1);
             }
             if (val2 < ERROR){
                engine_right.set_target_speed(val2);
             }
             else{
+                Serial.println(val2);
             }
-            Serial.println(val1);
-            Serial.println(val2);
+          //  Serial.println(val1);
+          //  Serial.println(val2);
             break;
             case 2:
             Serial.println("PID coeff");
             val1 = set_param.check_error_c(&buffer[3], 0, buffer[2]);
-            val2 = set_param.check_error_c(&buffer[9], 1, buffer[2]);
+            val2 = set_param.check_error_c(&buffer[9], 1, buffer[2]); //проверка на L/R (в самой функции)
+            if (val1 < ERROR){
             if (buffer[2] == 'L' || buffer[2] == 'l') {
                 if (val1 < ERROR && val2 < ERROR){
                     engine_left.set_coefficient(val1, 0, val2);
@@ -216,6 +223,8 @@ void set_speed_serial() {
                 engine_left.set_coefficient(10000, 0, val2);
                 }
                 else{
+                    Serial.println(val1);
+                    Serial.println(val2);
                 }
             }
             else {
@@ -223,16 +232,20 @@ void set_speed_serial() {
                     engine_right.set_coefficient(val1, 0, val2);
                 }
                 else if (val1 < ERROR && val2 >= ERROR){
-                engine_right.set_coefficient(val1, 0, 10000);
+                    engine_right.set_coefficient(val1, 0, 10000);
                 }
                 else if (val2 < ERROR && val1 >= ERROR){
-                engine_right.set_coefficient(10000, 0, val2);
+                    engine_right.set_coefficient(10000, 0, val2);
                 }
                 else{
+                    Serial.println(val1);
+                    Serial.println(val2);
                 }
             }
-            Serial.println(val1);
-            Serial.println(val2);
+            }
+            else { Serial.println(val1); }
+          //  Serial.println(val1);
+           // Serial.println(val2);
             break;
             case 3:
             Serial.println("Frequency set");
@@ -254,41 +267,21 @@ void set_speed_serial() {
     }
 }
 void work_with_CAN(){
-    CAN_frame_t rx_frame;
+  //  CAN_frame_t rx_frame;
     Set_Serial Get_data;
+    for (int i = 0; i < 8; i++){
+        buf[i] = 253;
+    }
+     delay(1000);
+     uint16_t buf1[1];
+     buf1[0] = 56;
+    Get_data.print(buf1 , 12);
+     Get_data.print(buf , 10);
   // Receive next CAN frame from queue
-  if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
-
-    if (rx_frame.FIR.B.FF == CAN_frame_std) {
-    //  printf("New standard frame");
-    }
-    else { //расширенный кадр
-      printf("New extended frame");
-    }
-
-    if (rx_frame.FIR.B.RTR == CAN_RTR) { //Если этот бит равен нулю, значит передаётся Data Frame (полезные данные), если равен единице, значит передаётся Remote Frame.
-      printf(" RTR from 0x%08X, DLC %d\r\n", rx_frame.MsgID,  rx_frame.FIR.B.DLC);
-    }
-    else {
-  //    printf(" from 0x%08X, DLC %d, Data ", rx_frame.MsgID,  rx_frame.FIR.B.DLC); //DLC четыре бита определяющие количество полезных байт (DATA) в кадре.
-      for (int i = 0; i < rx_frame.FIR.B.DLC; i++) {
-         // Serial.print(rx_frame.data.u8[i]); //эти данные в массив записывать
-         //  Serial.println();
-
-        // Serial.print(" ");
-   //   printf("0x%02X ", rx_frame.data.u8[i]);
-      }
-           Serial.println();
-   
-   //  Serial.print(rx_frame.MsgID, HEX);
-     if (rx_frame.MsgID == 11){
-       //  Serial.print("DONE");
-     }
+/* if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
      Get_data.print(rx_frame.data.u8,rx_frame.MsgID );
-  printf("\n");
-  
-   }
-}
+     //Get_data.print( );
+     }*/
 }
 #else
 
