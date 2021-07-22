@@ -125,13 +125,13 @@ void setup() {
     stop();
     /// --- Настройка таймера ---
     // Настраиваем 0-й таймер с делителем в 80 тактов
-    timer = timerBegin(TIMER_NUMBER, TIMER_DIVIDER, true);
+   // timer = timerBegin(TIMER_NUMBER, TIMER_DIVIDER, true);
     // Привязываем прерывание к функции timer_interrupt()
-    timerAttachInterrupt(timer, &timer_interrupt, true);
+   // timerAttachInterrupt(timer, &timer_interrupt, true);
     // Настраиваем прерывание на 750мс
-    timerAlarmWrite(timer, TIMER_COUNTER, true);
+  //  timerAlarmWrite(timer, TIMER_COUNTER, true);
     // Запуск таймера
-    timerAlarmEnable(timer);
+  //  timerAlarmEnable(timer);
     /// --- - ---
 
     engine_left.set_target_speed(0);
@@ -168,7 +168,7 @@ void set_speed_serial() {
         }
         delay(1000);
         uint8_t size = Serial.readBytes(&buffer[0], MAX);
-        int16_t cmd = set_param.read_command(buffer, size); //не стоит передавать size, тк буфф будет просто заполнен нулями
+        int16_t cmd = set_param.read_command(buffer, size); 
         if(cmd < ERROR) {
             switch(cmd){
                 case 0: 
@@ -178,13 +178,15 @@ void set_speed_serial() {
             val1 = set_param.check_error_t(&buffer[3], 0);
             val2 = set_param.check_error_t(&buffer[9], 1);
             if (val1 < ERROR){
-                engine_left.set_target_speed(val1);
+                //engine_left.set_target_speed(val1);
+                engine_left.set_power(val1);
             }
             else{
                 Serial.println(val1);
             }
             if (val2 < ERROR){
-               engine_right.set_target_speed(val2);
+              // engine_right.set_target_speed(val2);
+              engine_right.set_power(val2);
             }
             else{
                 Serial.println(val2);
@@ -263,7 +265,7 @@ void work_with_CAN(){
     buf1[0] = 56;
   //  data.print(buf1 , 12);
   //  data.print(buf , 10);
-  //  data.print( engine_left.get_speed(), 9);
+  //  data.print( engine_left.get_speed(), 9); //9 - ID
   //  data.print( engine_right.get_speed(), 9);
   // Receive next CAN frame from queue
   //Serial.println(rx_frame.MsgID);
