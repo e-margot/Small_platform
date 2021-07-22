@@ -1,12 +1,8 @@
-#define OLD_CODE
+//#define OLD_CODE
 #ifndef OLD_CODE
 #include "Set_Serial.h"
 
-Set_Serial::Set_Serial() {
-    size=0; 
-    val = 0;
-
-}
+Set_Serial::Set_Serial(): val(0), size(0) {}
 
 Set_Serial::~Set_Serial(){
     val = 0;
@@ -15,7 +11,7 @@ Set_Serial::~Set_Serial(){
 int16_t Set_Serial::check_error_t(uint8_t *buf, bool num){
   val = 0;
   read_val(buf);
-    if (val > 300 || val < -300){
+    if (val > 495 || val < -495){
        if (!num){  return INTERVAL_T_L;}
        else return INTERVAL_T_R;
     }
@@ -84,7 +80,7 @@ int16_t Set_Serial::read_command(uint8_t *buf, uint8_t size) {
             return NOT_CMD;
     } 
 }
-
+#else 
 void Set_Serial::print(uint8_t *data, uint32_t ID){
     Serial.println("Hello");
     if (ID == 11){
@@ -228,11 +224,10 @@ void Set_Serial::format_byte(uint8_t *data, uint8_t len){
         Serial.print(new_data[i]);
     }
 }
-#else 
+//#else 
 #include "Set_Serial.h"
 
 Set_Serial::Set_Serial() {
-    size=0; 
     val = 0;
 }
 
@@ -313,83 +308,135 @@ int16_t Set_Serial::read_command(uint8_t *buf, uint8_t size) {
     } 
 }
 
-void Set_Serial::print(uint16_t *data, uint32_t ID){
+void Set_Serial::print(uint8_t *data, uint32_t ID){
 //void Set_Serial::print(){ 
     Serial.println();
+    uint8_t size = 0;
   /*  uint32_t ID1 = 10;
     uint8_t data1[8];
     uint8_t value = 4;
     for (int i = 0; i<8; i++){
         data1[i] = value++;
     }*/
-    if (ID == 10){
-        tmp = new char[IR_MAX*3 + SERIAL_IR];
-        format_byte(data, IR_MAX);
+    if (ID == 9){ //rapidity
+        size = R_MAX*3 + SERIAL_R;
+        tmp = new char[size];
+        format_byte(data, R_MAX, size - 1);
+        tmp[0] = 'S';
+        tmp[1] = 'R';
+        tmp[size - 1] = 'E';
+        for (int i = 0; i < size; i++){
+            Serial.print(tmp[i]);
+            }
+    }
+    else if (ID == 10){
+        size = IR_MAX*3 + SERIAL_IR;
+        tmp = new char[size];
+        format_byte(data, IR_MAX, size - 1) ;
         tmp[0] = 'S';
         tmp[1] = 'I';
-        tmp[IR_MAX*3 + SERIAL_IR - 1] = 'E';
-        for (int i = 0; i < IR_MAX*3 + SERIAL_IR; i++){
-            Serial.print(tmp[i]);}
+        tmp[size - 1] = 'E';
+        for (int i = 0; i < size; i++){
+            Serial.print(tmp[i]);
+            }
     }
     else if (ID > 10) {
-        tmp = new char[US_MAX*3 + SERIAL_US];
-        format_byte(data, US_MAX);
+        size = US_MAX*3 + SERIAL_US;
+        tmp = new char[size];
+        format_byte(data, US_MAX, size - 1);
         tmp[0] = 'S';
         tmp[1] = 'U';
         switch(ID){
             //US1
             case 11:
-            tmp[2] = '1';
+            tmp[2] = '1'; //forward
             break;
             //US2
             case 12:
-            tmp[2] = '2';
+            tmp[2] = '2'; //back
             break;
             //US3
             case 13:
-            tmp[2] = '3';
+            tmp[2] = '3'; //left
             break;
             //US4
             case 14:
-            tmp[2] = '4';
+            tmp[2] = '4'; //right
             break;
             default: Serial.print(ERR_ID);
         }
-        tmp[US_MAX*3 + SERIAL_US - 1] = 'E';
-        for (int i = 0; i < (US_MAX*3 + SERIAL_US); i++){
+        tmp[size - 1] = 'E';
+        for (int i = 0; i <  size; i++){
                Serial.print(tmp[i]);}
     }
- /*   switch(ID){
-        //IR
-        case 10: 
-        tmp = new uint8_t [IR_MAX*3 + CAN_IR];
-        format_byte(data, IR_MAX);
-        break;
-        //US1
-        case 11:
-        tmp = new uint8_t[US_MAX*3 + CAN_US];
-        format_byte(data, US_MAX);
-        //US2
-        case 12:
-        tmp = new uint8_t[US_MAX*3 + CAN_US];
-        format_byte(data, US_MAX);
-        //US3
-        case 13:
-        tmp = new uint8_t[US_MAX*3 + CAN_US];
-        format_byte(data, US_MAX);
-        //US4
-        case 14:
-        tmp = new uint8_t[US_MAX*3 + CAN_US];
-        format_byte(data, US_MAX);
-        default: Serial.print(ERR_ID);
-    }*/
 }
 
-void Set_Serial::format_byte(uint16_t *data, uint8_t len){
-    if (len == 8) {size = len*3 + 2; }
-    else if (len == 1){size = len*3 + 3; }
-   // size = len*3 + 2; 
-    uint16_t *get_data = new uint16_t [len]; //current data
+void Set_Serial::print(int32_t data, uint32_t ID){
+//void Set_Serial::print(){ 
+    Serial.println();
+    uint8_t size = 0;
+  /*  uint32_t ID1 = 10;
+    uint8_t data1[8];
+    uint8_t value = 4;
+    for (int i = 0; i<8; i++){
+        data1[i] = value++;
+    }*/
+    if (ID == 9){ //rapidity
+        size = R_MAX*3 + SERIAL_R;
+        tmp = new char[size];
+        format_byte(data, R_MAX, size - 1);
+        tmp[0] = 'S';
+        tmp[1] = 'R';
+        tmp[size - 1] = 'E';
+        for (int i = 0; i < size; i++){
+            Serial.print(tmp[i]);
+            }
+    }
+    else if (ID == 10){
+        size = IR_MAX*3 + SERIAL_IR;
+        tmp = new char[size];
+        format_byte(data, IR_MAX, size - 1) ;
+        tmp[0] = 'S';
+        tmp[1] = 'I';
+        tmp[size - 1] = 'E';
+        for (int i = 0; i < size; i++){
+            Serial.print(tmp[i]);
+            }
+    }
+    else if (ID > 10) {
+        size = US_MAX*3 + SERIAL_US;
+        tmp = new char[size];
+        format_byte(data, US_MAX, size - 1);
+        tmp[0] = 'S';
+        tmp[1] = 'U';
+        switch(ID){
+            //US1
+            case 11:
+            tmp[2] = '1'; //forward
+            break;
+            //US2
+            case 12:
+            tmp[2] = '2'; //back
+            break;
+            //US3
+            case 13:
+            tmp[2] = '3'; //left
+            break;
+            //US4
+            case 14:
+            tmp[2] = '4'; //right
+            break;
+            default: Serial.print(ERR_ID);
+        }
+        tmp[size - 1] = 'E';
+        for (int i = 0; i <  size; i++){
+               Serial.print(tmp[i]);}
+    }
+}
+
+
+void Set_Serial::format_byte(uint8_t *data, uint8_t len, uint8_t size){
+    int32_t *get_data = new int32_t [len]; //current data
     for (int i = 2; i < size; i++){ 
         tmp[i] = 0;
     }
@@ -405,5 +452,21 @@ void Set_Serial::format_byte(uint16_t *data, uint8_t len){
     delete[] get_data;
 }
 
+void Set_Serial::format_byte(int32_t data, uint8_t len, uint8_t size){
+    int32_t *get_data = new int32_t [len]; //current data
+    for (int i = 2; i < size; i++){ 
+        tmp[i] = 0;
+    }
+    for (int i = 0; i < len; i++){
+        get_data[i] = data;
+    }
+    for (int i = len - 1; i > -1; i--){ //==0
+        for (int j = 0 ; j < 3;  j++){
+            tmp[--size] = get_data[i] % 10 + '0';
+            get_data[i]/=10;
+        }
+    }
+    delete[] get_data;
+}
 
 #endif

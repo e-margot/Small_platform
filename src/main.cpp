@@ -2,14 +2,16 @@
 #ifndef USE_OLD_CODE
 
 #include <Arduino.h>
-
 #include <Engine.h>
-
-#include "Set_Serial.h"
-
 #include <ESP32CAN.h>
 #include <CAN_config.h>
+#include <Set_Serial.h>
+#include <Get_data.h>
+
+unsigned long timing;
 void set_speed_serial();
+void work_with_CAN();
+void send_message();
 
 constexpr uint8_t M1_WHEEL_BACKWARD = GPIO_NUM_33; // = GPIO_NUM_27;
 constexpr uint8_t M1_WHEEL_FORWARD  = GPIO_NUM_25; // = GPIO_NUM_26;
@@ -136,40 +138,23 @@ void setup() {
     engine_right.set_target_speed(0);
      //CAN
      
-    // CAN_cfg.speed = CAN_SPEED_1000KBPS; //esp small platform
-    CAN_cfg.speed = CAN_SPEED_500KBPS; //esp lora
+     CAN_cfg.speed = CAN_SPEED_1000KBPS; //esp small platform
+ //   CAN_cfg.speed = CAN_SPEED_500KBPS; //esp lora
      CAN_cfg.tx_pin_id = GPIO_NUM_22;
      CAN_cfg.rx_pin_id = GPIO_NUM_21;
      CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
      // Init CAN Module
      ESP32Can.CANInit();
 }
-unsigned long timing;
-void send_message();
-void work_with_CAN();
+
 
 void loop() {
-  // set_speed_serial();
   work_with_CAN();
-  //Set_Serial set;
-  /* if (millis() - timing > freq_send){
-        timing = millis(); 
-        set.read_US();
-        Serial.println();
-   }*/
 }
 
-void send_message(){
-    Serial.print(" L = ");
-    Serial.print(engine_left.get_speed());
-    Serial.print(" R = ");
-    Serial.print(engine_right.get_speed());
-    work_with_CAN();
-}
 #define MAX 16
 
 uint8_t buffer[MAX];
-uint16_t buf[8];
 int16_t val1 = 0, val2 = 0;
 
 void set_speed_serial() {
@@ -267,22 +252,28 @@ void set_speed_serial() {
     }
 }
 void work_with_CAN(){
-  //  CAN_frame_t rx_frame;
-    Set_Serial Get_data;
+    CAN_frame_t rx_frame;
+    Get_data data;
+    uint8_t buf[8];
     for (int i = 0; i < 8; i++){
         buf[i] = 253;
     }
-     delay(1000);
-     uint16_t buf1[1];
-     buf1[0] = 56;
-    Get_data.print(buf1 , 12);
-     Get_data.print(buf , 10);
+    delay(1000);
+    uint8_t buf1[1];
+    buf1[0] = 56;
+  //  data.print(buf1 , 12);
+  //  data.print(buf , 10);
+  //  data.print( engine_left.get_speed(), 9);
+  //  data.print( engine_right.get_speed(), 9);
   // Receive next CAN frame from queue
-/* if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
-     Get_data.print(rx_frame.data.u8,rx_frame.MsgID );
-     //Get_data.print( );
-     }*/
+  //Serial.println(rx_frame.MsgID);
+ if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
+     Serial.print("HELLO");
+     data.print(rx_frame.data.u8,rx_frame.MsgID );
+     
+    }
 }
+
 #else
 
 #define USE_OLD_CODE1
