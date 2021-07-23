@@ -72,7 +72,7 @@ const int rx_queue_size = 10;       // Receive Queue size
 #define ERROR 30000
 hw_timer_t * timer = NULL;
 
-uint16_t freq_send = 1000;
+uint16_t freq_send = 100;
 
 // объекты двигателя
 Engine engine_right;
@@ -145,11 +145,17 @@ void setup() {
      CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
      // Init CAN Module
      ESP32Can.CANInit();
+     
+  /*   while(1){
+         engine_left.set_power(495);
+     }*/
 }
 
 
 void loop() {
-  work_with_CAN();
+ set_speed_serial();
+  // engine_right.set_power(495);
+ // work_with_CAN();
 }
 
 #define MAX 16
@@ -158,10 +164,13 @@ uint8_t buffer[MAX];
 int16_t val1 = 0, val2 = 0;
 
 void set_speed_serial() {
-    Set_Serial set_param;
+    Set_Serial set_param;                                 
+    work_with_CAN();
     if (millis() - timing > freq_send){
         timing = millis(); 
-        send_message();}
+        // work_with_CAN();
+       // send_message();
+        }
     if(Serial.available() != 0) {
         for(int i = 0; i < MAX; ++i){
             buffer[i] = 0;
@@ -174,7 +183,6 @@ void set_speed_serial() {
                 case 0: 
                 break;
                 case 1:
-            Serial.println("Target speed");
             val1 = set_param.check_error_t(&buffer[3], 0);
             val2 = set_param.check_error_t(&buffer[9], 1);
             if (val1 < ERROR){
@@ -195,7 +203,6 @@ void set_speed_serial() {
           //  Serial.println(val2);
             break;
             case 2:
-            Serial.println("PID coeff");
             val1 = set_param.check_error_c(&buffer[3], 0, buffer[2]);
             val2 = set_param.check_error_c(&buffer[9], 1, buffer[2]); //проверка на L/R (в самой функции)
             if (val1 < ERROR){
@@ -235,7 +242,6 @@ void set_speed_serial() {
            // Serial.println(val2);
             break;
             case 3:
-            Serial.println("Frequency set");
             val1 = set_param.check_error_f(&buffer[3]);
             if (val1 < ERROR)
             {
@@ -256,24 +262,11 @@ void set_speed_serial() {
 void work_with_CAN(){
     CAN_frame_t rx_frame;
     Get_data data;
-    uint8_t buf[8];
-    for (int i = 0; i < 8; i++){
-        buf[i] = 253;
-    }
-    delay(1000);
-    uint8_t buf1[1];
-    buf1[0] = 56;
-  //  data.print(buf1 , 12);
-  //  data.print(buf , 10);
-  //  data.print( engine_left.get_speed(), 9); //9 - ID
-  //  data.print( engine_right.get_speed(), 9);
-  // Receive next CAN frame from queue
-  //Serial.println(rx_frame.MsgID);
  if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
-     Serial.print("HELLO");
-     data.print(rx_frame.data.u8,rx_frame.MsgID );
-     
+   //data.print(rx_frame.data.u8,rx_frame.MsgID);
+   data.print(rx_frame.data.u8, rx_frame.MsgID);
     }
+
 }
 
 #else

@@ -1,6 +1,6 @@
 #include "Get_data.h"
 
-Get_data::Get_data(){}
+Get_data::Get_data(): tmp(nullptr){}
 
 Get_data:: ~Get_data(){
     if (tmp != nullptr) {delete[] tmp;}
@@ -112,11 +112,13 @@ void Get_data::format_byte(uint8_t *data, uint8_t len, uint8_t size){
     int32_t *get_data = new int32_t [len]; 
     for (int i = 0; i < len; i++){
         get_data[i] = data[i];
+        
     }
     for (int i = len - 1; i > -1; i--){ 
         for (int j = 0 ; j < 3;  j++){
             tmp[--size] = get_data[i] % 10 + '0';
             get_data[i] /= 10;
+            
         }
     }
     delete[] get_data;

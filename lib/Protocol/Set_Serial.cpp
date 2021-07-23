@@ -2,7 +2,7 @@
 #ifndef OLD_CODE
 #include "Set_Serial.h"
 
-Set_Serial::Set_Serial(): val(0), size(0) {}
+Set_Serial::Set_Serial(): val(0), size(0), tmp (nullptr){}
 
 Set_Serial::~Set_Serial(){
     val = 0;
